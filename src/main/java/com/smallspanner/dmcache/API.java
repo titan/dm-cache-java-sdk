@@ -4,11 +4,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import org.nanomsg.NanoLibrary;
 
-class IntBytePair {
-    public int i;
-    public byte [] bs;
-}
-
 public class API {
     static private NanoLibrary nano = null;
 
@@ -66,8 +61,69 @@ public class API {
         return result;
     }
 
-    static public byte [] get(String ipc, String key) {
-        return null;
+    static public byte [] get(String ipc, String key)
+        throws UnknownCmdException, KeyNotFoundException {
+        byte [] value = null;
+        int socket = nano.nn_socket(nano.AF_SP, nano.NN_REQ);
+        if (socket < 0) {
+            int errn = nano.nn_errno();
+            System.out.printf("*** Error: %d - %s\n", errn, nano.nn_strerror(errn));
+            return null;
+        }
+        String addr = "ipc://" + ipc;
+        int ep = nano.nn_connect(socket, addr);
+        if (ep < 0) {
+            int errn = nano.nn_errno();
+            System.out.printf("*** Error: %d - %s\n", errn, nano.nn_strerror(errn));
+            return null;
+        }
+        try {
+            byte [] kbs = key.getBytes("UTF-8");
+            byte [] kl = int2varint(kbs.length);
+            int cmdlen = 1 + kl.length + kbs.length;
+            ByteBuffer buf = ByteBuffer.allocateDirect(cmdlen);
+            buf = buf.put((byte) 0x01).put(kl).put(kbs);
+            if (cmdlen == nano.nn_send(socket, buf, 0, cmdlen, 0)) {
+                buf = ByteBuffer.allocate(4096);
+                int buflen = nano.nn_recv(socket, buf, 0, -1, 0);
+                if (buflen > 0) {
+                    byte hdr = buf.get();
+                    if (hdr == 0x81) {
+                        int klen = varint2int(buf);
+                        buf = (ByteBuffer) buf.position(buf.position() + klen);
+                        int vlen = varint2int(buf);
+                        value = new byte [vlen];
+                        buf.get(value);
+                    } else if (hdr == 0x00) {
+                        int elen = varint2int(buf);
+                        byte [] err = new byte[elen];
+                        buf.get(err);
+                        throw new KeyNotFoundException(new String(err, "UTF-8"));
+                    } else {
+                        throw new UnknownCmdException(String.format("Unknown cmd %02x", hdr));
+                    }
+                } else {
+                    if (buflen == 0) {
+                        System.out.printf("*** Error: Received nothing\n");
+                    } else {
+                        int errn = nano.nn_errno();
+                        System.out.printf("*** Error: %d - %s\n", errn, nano.nn_strerror(errn));
+                    }
+                }
+            } else {
+                System.out.printf("*** Error: Sent size is incorrect.\n");
+            }
+        } catch (KeyNotFoundException e) {
+            throw e;
+        } catch (UnknownCmdException e) {
+            throw e;
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            nano.nn_shutdown(socket, ep);
+            nano.nn_close(socket);
+        }
+        return value;
     }
 
     static private byte [] int2varint(int x) {
@@ -101,21 +157,19 @@ public class API {
         return bs;
     }
 
-    static private IntBytePair varint2int(byte [] bs) {
+    static private int varint2int(ByteBuffer bb) {
+        int r = 0;
         int s = 0;
-        IntBytePair p = new IntBytePair();
-        p.i = 0;
-        for (int i = 0; i < bs.length; i ++ ) {
-            int b = (int) bs[i];
+        for (int i = 0; i < 5; i ++) {
+            int b = (int) bb.get();
             if ((b & 0x80) == 0) {
-                p.i |= ((b & 0x7F) << s);
-                p.bs = Arrays.copyOfRange(bs, i + 1, bs.length);
-                return p;
+                r |= ((b & 0x7F) << s);
+                return r;
             } else {
-                p.i |= ((b & 0x7F) << s);
+                r |= ((b & 0x7F) << s);
                 s += 7;
             }
         }
-        return p;
+        return r;
     }
 }
