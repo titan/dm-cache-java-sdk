@@ -9,6 +9,20 @@ jar {
     }
 }
 
+repositories {
+    mavenCentral()
+}
+
 dependencies {
     compile fileTree(dir: 'lib', include: '*.jar')
+    testCompile 'org.testng:testng:6.8'
+}
+
+test {
+    useTestNG()
+    testLogging.showStandardStreams = true
+}
+
+tasks.withType(Test) {
+    systemProperty "java.library.path", file("lib")
 }
