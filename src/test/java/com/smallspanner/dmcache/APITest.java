@@ -88,6 +88,17 @@ public class APITest {
         assert Math.abs(f - value) < 0.000001;
     }
 
+    @Test(dataProvider = "doublekvset", dependsOnMethods={"uint2varuint", "putLong"})
+    public void putDouble(String key, double value) {
+        assert API.putDouble(key, value);
+    }
+
+    @Test(dataProvider = "doublekvset", dependsOnMethods={"putDouble", "varuint2uint", "getLong"})
+    public void getDouble(String key, double value) throws Exception {
+        double d = API.getDouble(key);
+        assert Math.abs(d - value) < 0.0000000001;
+    }
+
     @DataProvider(name = "kvset")
     private Object [][] kvset() {
         return new Object [][] {
@@ -121,6 +132,15 @@ public class APITest {
             {"1.23", 1.23f},
             {"123.456", 123.456f},
             {"12345.6789", 12345.6789f}
+        };
+    }
+
+    @DataProvider(name = "doublekvset")
+    private Object [][] doublekvset() {
+        return new Object [][] {
+            {"1.0000000023", 1.0000000023d},
+            {"1230000.00000456", 1230000.00000456d},
+            {"1020304050.60708090", 1020304050.60708090d}
         };
     }
 

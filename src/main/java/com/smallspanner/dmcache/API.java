@@ -93,6 +93,15 @@ public class API {
         return putFloat(DEFAULT_IPC, key, value);
     }
 
+    static public boolean putDouble(String ipc, String key, double value) {
+        byte [] bs = long2bytes(Double.doubleToLongBits(value));
+        return put(ipc, key, bs);
+    }
+
+    static public boolean putDouble(String key, double value) {
+        return putDouble(DEFAULT_IPC, key, value);
+    }
+
     static public byte [] get(String key)
         throws UnknownCmdException, KeyNotFoundException {
         return get(DEFAULT_IPC, key);
@@ -193,6 +202,16 @@ public class API {
     static public float getFloat(String key)
         throws UnknownCmdException, KeyNotFoundException {
         return getFloat(DEFAULT_IPC, key);
+    }
+
+    static public double getDouble(String ipc, String key)
+        throws UnknownCmdException, KeyNotFoundException {
+        return Double.longBitsToDouble(getLong(ipc, key));
+    }
+
+    static public double getDouble(String key)
+        throws UnknownCmdException, KeyNotFoundException {
+        return getDouble(DEFAULT_IPC, key);
     }
 
     static byte [] uint2varuint(int x) {
