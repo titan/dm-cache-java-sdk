@@ -75,6 +75,15 @@ public class API {
         return putInt(DEFAULT_IPC, key, value);
     }
 
+    static public boolean putLong(String ipc, String key, long value) {
+        byte [] bs = long2bytes(value);
+        return put(ipc, key, bs);
+    }
+
+    static public boolean putLong(String key, long value) {
+        return putLong(DEFAULT_IPC, key, value);
+    }
+
     static public byte [] get(String key)
         throws UnknownCmdException, KeyNotFoundException {
         return get(DEFAULT_IPC, key);
@@ -156,6 +165,17 @@ public class API {
         return getInt(DEFAULT_IPC, key);
     }
 
+    static public long getLong(String ipc, String key)
+        throws UnknownCmdException, KeyNotFoundException {
+        byte [] bs = get(ipc, key);
+        return bytes2long(bs);
+    }
+
+    static public long getLong(String key)
+        throws UnknownCmdException, KeyNotFoundException {
+        return getLong(DEFAULT_IPC, key);
+    }
+
     static byte [] uint2varuint(int x) {
         x = x & 0xFFFFFFFF;
         byte [] bs = null;
@@ -218,6 +238,29 @@ public class API {
         int s = 24;
         for (int i = 0; i < 4; i ++) {
             r += (((int)bs[i]) & 0xFF) << s;
+            s -= 8;
+        }
+        return r;
+    }
+
+    static byte [] long2bytes(long l) {
+        byte [] bs = new byte[8];
+        bs[0] = (byte)((l >> 56) & 0xFF);
+        bs[1] = (byte)((l >> 48) & 0xFF);
+        bs[2] = (byte)((l >> 40) & 0xFF);
+        bs[3] = (byte)((l >> 32) & 0xFF);
+        bs[4] = (byte)((l >> 24) & 0xFF);
+        bs[5] = (byte)((l >> 16) & 0xFF);
+        bs[6] = (byte)((l >>  8) & 0xFF);
+        bs[7] = (byte)(l & 0xFF);
+        return bs;
+    }
+
+    static long bytes2long(byte [] bs) {
+        long r = 0;
+        int s = 56;
+        for (int i = 0; i < 8; i ++) {
+            r += (((long)bs[i]) & 0xFF) << s;
             s -= 8;
         }
         return r;

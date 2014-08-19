@@ -31,14 +31,21 @@ public class APITest {
         assert i == j;
     }
 
+    @Test(dataProvider = "longset")
+    public void long2bytes(long l, byte [] bs) {
+        byte [] xs = API.long2bytes(l);
+        assert cmp(xs, bs);
+    }
+
+    @Test(dataProvider = "longset")
+    public void bytes2long(long l, byte [] bs) {
+        long k = API.bytes2long(bs);
+        assert l == k;
+    }
+
     @Test(dataProvider = "kvset", dependsOnMethods={"uint2varuint"})
     public void put(String key, String value) throws Exception {
         assert API.put("/tmp/kad.ipc", key, value.getBytes("UTF-8"));
-    }
-
-    @Test(dataProvider = "intkvset", dependsOnMethods={"uint2varuint", "int2bytes"})
-    public void putInt(String key, int value) {
-        assert API.putInt("/tmp/kad.ipc", key, value);
     }
 
     @Test(dataProvider = "kvset", dependsOnMethods={"put", "varuint2uint"})
@@ -47,10 +54,26 @@ public class APITest {
         assert new String(bs, "UTF-8").equals(value);
     }
 
+    @Test(dataProvider = "intkvset", dependsOnMethods={"uint2varuint", "int2bytes"})
+    public void putInt(String key, int value) {
+        assert API.putInt(key, value);
+    }
+
     @Test(dataProvider = "intkvset", dependsOnMethods={"putInt", "varuint2uint", "bytes2int"})
     public void getInt(String key, int value) throws Exception {
-        int i = API.getInt("/tmp/kad.ipc", key);
+        int i = API.getInt(key);
         assert i == value;
+    }
+
+    @Test(dataProvider = "longkvset", dependsOnMethods={"uint2varuint", "long2bytes"})
+    public void putLong(String key, long value) {
+        assert API.putLong(key, value);
+    }
+
+    @Test(dataProvider = "longkvset", dependsOnMethods={"putLong", "varuint2uint", "bytes2long"})
+    public void getLong(String key, long value) throws Exception {
+        long l = API.getLong(key);
+        assert l == value;
     }
 
     @DataProvider(name = "kvset")
@@ -68,6 +91,15 @@ public class APITest {
             {"1", 1},
             {"2", 2},
             {"3", 3}
+        };
+    }
+
+    @DataProvider(name = "longkvset")
+    private Object [][] longkvset() {
+        return new Object [][] {
+            {"100000000000", 100000000000l},
+            {"200000000000", 200000000000l},
+            {"300000000000", 300000000000l}
         };
     }
 
@@ -90,8 +122,22 @@ public class APITest {
     @DataProvider(name = "intset")
     private Object [][] intset() {
         byte [] bs256 = {0x00, 0x00, 0x01, 0x00};
+        byte [] bs65535 = {0x00, 0x00, (byte)0xFF, (byte)0xFF};
         return new Object [][] {
-            {256, bs256}
+            {256, bs256},
+            {65535, bs65535}
+        };
+    }
+
+    @DataProvider(name = "longset")
+    private Object [][] longset() {
+        byte [] bs256 = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
+        byte [] bs15679000001 = {0x00, 0x00, 0x00, 0x03, (byte)0xa6, (byte)0x8a, (byte)0x8d, (byte)0xc1};
+        byte [] bs189641242259741648 = {0x02, (byte)0xa1, (byte)0xbd, (byte)0xb4, (byte)0x7f, (byte)0xa7, (byte)0xdb, (byte)0xd0};
+        return new Object [][] {
+            {256l, bs256},
+            {15679000001l, bs15679000001},
+            {189641242259741648l, bs189641242259741648}
         };
     }
 
