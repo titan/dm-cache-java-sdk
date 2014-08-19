@@ -66,6 +66,15 @@ public class API {
         return result;
     }
 
+    static public boolean putInt(String ipc, String key, int value) {
+        byte [] bs = int2bytes(value);
+        return put(ipc, key, bs);
+    }
+
+    static public boolean putInt(String key, int value) {
+        return putInt(DEFAULT_IPC, key, value);
+    }
+
     static public byte [] get(String key)
         throws UnknownCmdException, KeyNotFoundException {
         return get(DEFAULT_IPC, key);
@@ -136,6 +145,17 @@ public class API {
         return value;
     }
 
+    static public int getInt(String ipc, String key)
+        throws UnknownCmdException, KeyNotFoundException {
+        byte [] bs = get(ipc, key);
+        return bytes2int(bs);
+    }
+
+    static public int getInt(String key)
+        throws UnknownCmdException, KeyNotFoundException {
+        return getInt(DEFAULT_IPC, key);
+    }
+
     static byte [] uint2varuint(int x) {
         x = x & 0xFFFFFFFF;
         byte [] bs = null;
@@ -180,6 +200,25 @@ public class API {
                 r |= ((b & 0x7F) << s);
                 s += 7;
             }
+        }
+        return r;
+    }
+
+    static byte [] int2bytes(int i) {
+        byte [] bs = new byte[4];
+        bs[0] = (byte)((i >> 24) & 0xFF);
+        bs[1] = (byte)((i >> 16) & 0xFF);
+        bs[2] = (byte)((i >>  8) & 0xFF);
+        bs[3] = (byte)(i & 0xFF);
+        return bs;
+    }
+
+    static int bytes2int(byte [] bs) {
+        int r = 0;
+        int s = 24;
+        for (int i = 0; i < 4; i ++) {
+            r += (((int)bs[i]) & 0xFF) << s;
+            s -= 8;
         }
         return r;
     }
