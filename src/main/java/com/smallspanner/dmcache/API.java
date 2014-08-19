@@ -6,9 +6,14 @@ import org.nanomsg.NanoLibrary;
 
 public class API {
     static private NanoLibrary nano = null;
+    static private String DEFAULT_IPC = "/tmp/kad.ipc";
 
     static {
         nano = new NanoLibrary();
+    }
+
+    static public boolean put(String key, byte [] value) {
+        return put(DEFAULT_IPC, key, value);
     }
 
     static public boolean put(String ipc, String key, byte [] value) {
@@ -59,6 +64,11 @@ public class API {
         nano.nn_shutdown(socket, ep);
         nano.nn_close(socket);
         return result;
+    }
+
+    static public byte [] get(String key)
+        throws UnknownCmdException, KeyNotFoundException {
+        return get(DEFAULT_IPC, key);
     }
 
     static public byte [] get(String ipc, String key)
