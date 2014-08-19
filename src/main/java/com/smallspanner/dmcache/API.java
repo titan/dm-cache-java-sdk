@@ -84,6 +84,15 @@ public class API {
         return putLong(DEFAULT_IPC, key, value);
     }
 
+    static public boolean putFloat(String ipc, String key, float value) {
+        byte [] bs = int2bytes(Float.floatToIntBits(value));
+        return put(ipc, key, bs);
+    }
+
+    static public boolean putFloat(String key, float value) {
+        return putFloat(DEFAULT_IPC, key, value);
+    }
+
     static public byte [] get(String key)
         throws UnknownCmdException, KeyNotFoundException {
         return get(DEFAULT_IPC, key);
@@ -174,6 +183,16 @@ public class API {
     static public long getLong(String key)
         throws UnknownCmdException, KeyNotFoundException {
         return getLong(DEFAULT_IPC, key);
+    }
+
+    static public float getFloat(String ipc, String key)
+        throws UnknownCmdException, KeyNotFoundException {
+        return Float.intBitsToFloat(getInt(ipc, key));
+    }
+
+    static public float getFloat(String key)
+        throws UnknownCmdException, KeyNotFoundException {
+        return getFloat(DEFAULT_IPC, key);
     }
 
     static byte [] uint2varuint(int x) {

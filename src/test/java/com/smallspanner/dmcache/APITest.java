@@ -1,5 +1,6 @@
 package com.smallspanner.dmcache;
 
+import java.lang.Math;
 import java.nio.ByteBuffer;
 import org.testng.annotations.*;
 
@@ -76,6 +77,17 @@ public class APITest {
         assert l == value;
     }
 
+    @Test(dataProvider = "floatkvset", dependsOnMethods={"uint2varuint", "putInt"})
+    public void putFloat(String key, float value) {
+        assert API.putFloat(key, value);
+    }
+
+    @Test(dataProvider = "floatkvset", dependsOnMethods={"putFloat", "varuint2uint", "getInt"})
+    public void getFloat(String key, float value) throws Exception {
+        float f = API.getFloat(key);
+        assert Math.abs(f - value) < 0.000001;
+    }
+
     @DataProvider(name = "kvset")
     private Object [][] kvset() {
         return new Object [][] {
@@ -100,6 +112,15 @@ public class APITest {
             {"100000000000", 100000000000l},
             {"200000000000", 200000000000l},
             {"300000000000", 300000000000l}
+        };
+    }
+
+    @DataProvider(name = "floatkvset")
+    private Object [][] floatkvset() {
+        return new Object [][] {
+            {"1.23", 1.23f},
+            {"123.456", 123.456f},
+            {"12345.6789", 12345.6789f}
         };
     }
 
