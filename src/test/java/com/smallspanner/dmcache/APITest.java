@@ -1,8 +1,14 @@
 package com.smallspanner.dmcache;
 
+import java.io.Serializable;
 import java.lang.Math;
 import java.nio.ByteBuffer;
 import org.testng.annotations.*;
+
+class People implements Serializable {
+    public String name;
+    public int age;
+}
 
 public class APITest {
     @Test(dataProvider = "varintset")
@@ -109,6 +115,18 @@ public class APITest {
         assert API.getString(key).equals(value);
     }
 
+    @Test(dataProvider = "serialkvset", dependsOnMethods={"uint2varuint"})
+    public void putSerializable(String key, Serializable value) {
+        assert API.putSerializable(key, value);
+    }
+
+    @Test(dataProvider = "serialkvset", dependsOnMethods={"putSerializable", "varuint2uint"})
+    public void getSerializable(String key, Serializable value) throws Exception {
+        People p = (People) API.getSerializable(key);
+        People q = (People) value;
+        assert p.name.equals(q.name) && p.age == q.age;
+    }
+
     @DataProvider(name = "kvset")
     private Object [][] kvset() {
         return new Object [][] {
@@ -160,6 +178,20 @@ public class APITest {
             {"dm-cache-java-sdk-test1", "Hello World"},
             {"dm-cache-java-sdk-test2", "This is a test."},
             {"dm-cache-java-sdk-test3", "It's hard to do a full test."}
+        };
+    }
+
+    @DataProvider(name = "serialkvset")
+    private Object [][] serialkvset() {
+        People anna = new People();
+        anna.name = "Anna";
+        anna.age = 4;
+        People elsa = new People();
+        elsa.name = "Elsa";
+        elsa.age = 7;
+        return new Object [][] {
+            {"Anna", anna},
+            {"Elsa", elsa}
         };
     }
 

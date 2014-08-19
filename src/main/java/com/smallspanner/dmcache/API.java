@@ -1,5 +1,11 @@
 package com.smallspanner.dmcache;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -111,6 +117,38 @@ public class API {
     static public boolean putString(String key, String value)
         throws UnsupportedEncodingException {
         return putString(DEFAULT_IPC, key, value);
+    }
+
+    static public boolean putSerializable(String ipc, String key, Serializable value) {
+        ByteArrayOutputStream baos = null;
+        ObjectOutputStream oos = null;
+        try {
+            baos = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(baos);
+            oos.writeObject(value);
+            byte [] bs = baos.toByteArray();
+            return put(ipc, key, bs);
+        } catch(IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                if (oos != null)
+                    oos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (baos != null)
+                    baos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static public boolean putSerializable(String key, Serializable value) {
+        return putSerializable(DEFAULT_IPC, key, value);
     }
 
     static public byte [] get(String key)
@@ -233,6 +271,41 @@ public class API {
     static public String getString(String key)
         throws UnknownCmdException, KeyNotFoundException, UnsupportedEncodingException {
         return getString(DEFAULT_IPC, key);
+    }
+
+    static public Serializable getSerializable(String ipc, String key)
+        throws UnknownCmdException, KeyNotFoundException {
+        byte [] bs = get(ipc, key);
+        ByteArrayInputStream bais = null;
+        ObjectInputStream ois = null;
+        try {
+            bais = new ByteArrayInputStream(bs);
+            ois = new ObjectInputStream(bais);
+            return (Serializable) ois.readObject();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } catch(ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            try {
+                if (bais != null)
+                    bais.close();
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (ois != null)
+                    ois.close();
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    static public Serializable getSerializable(String key)
+        throws UnknownCmdException, KeyNotFoundException {
+        return getSerializable(DEFAULT_IPC, key);
     }
 
     static byte [] uint2varuint(int x) {
