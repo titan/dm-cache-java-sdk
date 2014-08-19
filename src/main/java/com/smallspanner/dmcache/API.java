@@ -1,5 +1,6 @@
 package com.smallspanner.dmcache;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import org.nanomsg.NanoLibrary;
@@ -100,6 +101,16 @@ public class API {
 
     static public boolean putDouble(String key, double value) {
         return putDouble(DEFAULT_IPC, key, value);
+    }
+
+    static public boolean putString(String ipc, String key, String value)
+        throws UnsupportedEncodingException {
+        return put(ipc, key, value.getBytes("UTF-8"));
+    }
+
+    static public boolean putString(String key, String value)
+        throws UnsupportedEncodingException {
+        return putString(DEFAULT_IPC, key, value);
     }
 
     static public byte [] get(String key)
@@ -212,6 +223,16 @@ public class API {
     static public double getDouble(String key)
         throws UnknownCmdException, KeyNotFoundException {
         return getDouble(DEFAULT_IPC, key);
+    }
+
+    static public String getString(String ipc, String key)
+        throws UnknownCmdException, KeyNotFoundException, UnsupportedEncodingException {
+        return new String(get(ipc, key), "UTF-8");
+    }
+
+    static public String getString(String key)
+        throws UnknownCmdException, KeyNotFoundException, UnsupportedEncodingException {
+        return getString(DEFAULT_IPC, key);
     }
 
     static byte [] uint2varuint(int x) {

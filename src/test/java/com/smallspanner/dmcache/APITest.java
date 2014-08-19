@@ -99,6 +99,16 @@ public class APITest {
         assert Math.abs(d - value) < 0.0000000001;
     }
 
+    @Test(dataProvider = "stringkvset", dependsOnMethods={"uint2varuint"})
+    public void putString(String key, String value) throws Exception {
+        assert API.putString(key, value);
+    }
+
+    @Test(dataProvider = "stringkvset", dependsOnMethods={"putString", "varuint2uint"})
+    public void getString(String key, String value) throws Exception {
+        assert API.getString(key).equals(value);
+    }
+
     @DataProvider(name = "kvset")
     private Object [][] kvset() {
         return new Object [][] {
@@ -141,6 +151,15 @@ public class APITest {
             {"1.0000000023", 1.0000000023d},
             {"1230000.00000456", 1230000.00000456d},
             {"1020304050.60708090", 1020304050.60708090d}
+        };
+    }
+
+    @DataProvider(name = "stringkvset")
+    private Object [][] stringkvset() {
+        return new Object [][] {
+            {"dm-cache-java-sdk-test1", "Hello World"},
+            {"dm-cache-java-sdk-test2", "This is a test."},
+            {"dm-cache-java-sdk-test3", "It's hard to do a full test."}
         };
     }
 
